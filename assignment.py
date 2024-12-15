@@ -23,7 +23,6 @@ from datetime import datetime
 )
 def assignment_airflow():
 
-    # Define tasks
     start_task = EmptyOperator(task_id="start_task")
     end_task = EmptyOperator(task_id="end_task")
 
@@ -100,15 +99,13 @@ def assignment_airflow():
     @task(trigger_rule=TriggerRule.ONE_SUCCESS)
     def load_to_sqlite(**kwargs):
         try:
-            # Parameter dari DAG
             folder_path = '/opt/airflow/data'
             filename = kwargs['params']['filename']
             file_path = os.path.join(folder_path, f"{filename}.csv")
             
-            # Baca data dari CSV
             df = pd.read_csv(file_path)
 
-            # Muat data ke SQLite
+            # load data to SQLite
             engine = sa.create_engine(f"sqlite:////opt/airflow/data/{filename}.sqlite")
             with engine.begin() as conn:
                 df.to_sql(filename, conn, index=False, if_exists="replace")
@@ -129,10 +126,6 @@ def assignment_airflow():
     read_json_task = read_json(filename="{{ params['filename'] }}")
 
     # Step 4: Load to SQLite (based on file type)
-    # load_sqlite_task = load_to_sqlite(
-    #     data="{{ task_instance.xcom_pull(task_ids='read_csv_task') if params['file_type'] == 'csv' else ti.xcom_pull(task_ids='read_json_task') }}", 
-    #     table_name="{{ params['filename'] }}"
-    # )
     load_sqlite_task = load_to_sqlite()
 
     # Set up task dependencies
